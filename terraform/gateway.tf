@@ -29,6 +29,7 @@ resource "aws_api_gateway_integration" "root_integration" {
   type                    = local.catalog_proxy_enabled ? "HTTP_PROXY" : "MOCK"
   integration_http_method = local.catalog_proxy_enabled ? "ANY" : null
   uri                     = local.catalog_proxy_enabled ? "${local.catalog_base}/" : null
+  connection_type         = local.catalog_proxy_enabled ? "INTERNET" : null
   
   request_templates = local.catalog_proxy_enabled ? {} : {
     "application/json" = "{\"statusCode\": 200}"
@@ -80,6 +81,7 @@ resource "aws_api_gateway_integration" "catalog_base_http" {
   type                    = "HTTP_PROXY"
   integration_http_method = "ANY"
   uri                     = "${local.catalog_base}/"
+  connection_type         = "INTERNET"
 }
 
 # --- /catalog/{proxy+} ---
