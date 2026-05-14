@@ -120,6 +120,8 @@ resource "aws_api_gateway_integration" "catalog_proxy_http" {
     "integration.request.path.proxy" = "method.request.path.proxy"
   }
 
+}
+
 # --- DEPLOYMENT & STAGE ---
 
 resource "aws_api_gateway_deployment" "main" {
