@@ -109,11 +109,16 @@ resource "aws_api_gateway_integration" "catalog_proxy_http" {
   http_method             = aws_api_gateway_method.catalog_proxy_any[0].http_method
   type                    = "HTTP_PROXY"
   integration_http_method = "ANY"
+  
+  # The {proxy} at the end of the URI is filled by the {proxy+} path parameter
   uri                     = "${local.catalog_base}/{proxy}"
+  
+  connection_type         = "INTERNET"
+
   request_parameters = {
+    # This maps the path from the Gateway URL to the Backend URL
     "integration.request.path.proxy" = "method.request.path.proxy"
   }
-}
 
 # --- DEPLOYMENT & STAGE ---
 
@@ -121,22 +126,17 @@ resource "aws_api_gateway_deployment" "main" {
   rest_api_id = aws_api_gateway_rest_api.main.id
 
   triggers = {
+    # Adding timestamp forces a brand new deployment every time you run CI/CD
     redeploy = sha1(join(",", [
       var.catalog_backend_url,
-      aws_api_gateway_method.root_any.id,
-      local.catalog_proxy_enabled ? aws_api_gateway_resource.catalog[0].id : ""
+      timestamp() 
     ]))
   }
 
-  # THIS IS THE CRITICAL FIX:
-  # It creates the new deployment before destroying the old one,
-  # allowing the stage to switch over without the "Active stages" error.
   lifecycle {
     create_before_destroy = true
   }
 
-  # We depend on the integrations to be ready, but NOT the responses
-  # to avoid the circular dependency we saw earlier.
   depends_on = [
     aws_api_gateway_integration.root_integration,
     aws_api_gateway_integration.catalog_base_http,
