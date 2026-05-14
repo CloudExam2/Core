@@ -31,7 +31,11 @@ jobs:
 
       - name: Terraform Plan
         run: terraform plan
+        env:
+          TF_VAR_catalog_backend_url: ${{ vars.CATALOG_BACKEND_URL }}
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve
+        env:
+          TF_VAR_catalog_backend_url: ${{ vars.CATALOG_BACKEND_URL }}

@@ -8,7 +8,11 @@ These variables are required for the Terraform provider and the GitHub Actions r
 | **AWS_SESSION_TOKEN** | Required for temporary/lab accounts. | GitHub Secrets |
 | **AWS_REGION** | Default region (e.g., us-east-1). | Static Config |
 | **GH_PAT** | Personal Access Token for GitHub API. | GitHub Secrets |
-| **TF_STATE_BUCKET** | S3 bucket for remote terraform state. | providers.tf |
+| **TF_STATE_BUCKET** | S3 bucket for remote terraform state. | `providers.tf` backend |
+
+First-time AWS setup (create the state bucket, optional lock table, apply order): see **`docs/bootstrap-lab.md`**.
+
+| **CATALOG_BACKEND_URL** | Optional. After Catalog EC2 is up, set to `http://PUBLIC_IP:80` (no trailing slash) so Core API Gateway can proxy `/catalog/*`. | GitHub Actions **variable** on Core repo, or `TF_VAR_catalog_backend_url` locally |
 
 ---
 

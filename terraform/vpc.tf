@@ -13,18 +13,15 @@ resource "aws_vpc" "main" {
   }
 }
 
-# --- Internet Gateway (disabled for student lab: no generic public internet path) ---
-# Re-enable the block below AND the default route in aws_route_table.public if you need
-# browser/SSH to the instance's public IPv4 from the open internet.
-#
-# resource "aws_internet_gateway" "main" {
-#   vpc_id = aws_vpc.main.id
-#   tags = {
-#     Name = "exam-core-igw"
-#   }
-# }
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
 
-# Subnets used by RDS (two AZs) and by interface endpoints / EC2 (see vpc_endpoints.tf).
+  tags = {
+    Name = "exam-core-igw"
+  }
+}
+
+# Public subnets (two AZs) for RDS subnet groups and EC2 with public IPs.
 resource "aws_subnet" "public_a" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
@@ -50,11 +47,10 @@ resource "aws_subnet" "public_b" {
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
-  # With no 0.0.0.0/0 route, traffic stays inside the VPC (+ AWS via interface endpoints).
-  # route {
-  #   cidr_block = "0.0.0.0/0"
-  #   gateway_id = aws_internet_gateway.main.id
-  # }
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
+  }
 
   tags = {
     Name = "exam-core-public-rt"
