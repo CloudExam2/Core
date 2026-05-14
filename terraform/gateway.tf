@@ -9,13 +9,6 @@ locals {
   catalog_base          = trimsuffix(trimspace(var.catalog_backend_url), "/")
 }
 
-resource "github_actions_organization_variable" "catalog_url" {
-  variable_name = "CATALOG_BACKEND_URL"
-  visibility    = "all"
-  # Ensures the URL is formatted correctly for the API Gateway proxy
-  value         = "http://${aws_instance.catalog_service.public_ip}:80"
-}
-
 resource "aws_api_gateway_rest_api" "main" {
   name = "exam-core-gateway"
   endpoint_configuration {
