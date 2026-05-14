@@ -1,11 +1,11 @@
 terraform {
   backend "s3" {
-    bucket         = "iteso-terraform-state-inaki-99"
-    key            = "core/terraform.tfstate"
-    region         = "us-east-1"
+    bucket = "iteso-terraform-state-inaki-99"
+    key    = "core/terraform.tfstate"
+    region = "us-east-1"
   }
 
-  
+
   required_providers {
     github = {
       source  = "integrations/github"
@@ -25,5 +25,5 @@ provider "aws" {
 
 provider "github" {
   token = var.github_token # Uses the GH_PAT secret you just set up
-  owner = "CloudExam2"  # Ensures it builds secrets in your organization
+  owner = "CloudExam2"     # Ensures it builds secrets in your organization
 }

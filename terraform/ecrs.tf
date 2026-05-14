@@ -26,4 +26,4 @@ resource "aws_ecr_repository" "sales" {
 # Notification ECR
 resource "aws_ecr_repository" "notification" {
   name = "notification-service"
-} 
+}
