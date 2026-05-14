@@ -1,4 +1,41 @@
-# Response logic only for MOCK mode
+data "aws_region" "current" {}
+
+# Logic to determine if we should proxy to Catalog or show the "Help" message
+locals {
+  catalog_proxy_enabled = trimspace(var.catalog_backend_url) != ""
+  catalog_base          = trimsuffix(trimspace(var.catalog_backend_url), "/")
+}
+
+resource "aws_api_gateway_rest_api" "main" {
+  name = "exam-core-gateway"
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+
+# --- ROOT (/) ---
+
+resource "aws_api_gateway_method" "root_any" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_rest_api.main.root_resource_id
+  http_method   = "ANY"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "root_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_rest_api.main.root_resource_id
+  http_method             = aws_api_gateway_method.root_any.http_method
+  type                    = local.catalog_proxy_enabled ? "HTTP_PROXY" : "MOCK"
+  integration_http_method = local.catalog_proxy_enabled ? "ANY" : null
+  uri                     = local.catalog_proxy_enabled ? "${local.catalog_base}/" : null
+  
+  request_templates = local.catalog_proxy_enabled ? {} : {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+# Response logic only for MOCK mode (when Catalog URL is empty)
 resource "aws_api_gateway_method_response" "root_mock_200" {
   count       = local.catalog_proxy_enabled ? 0 : 1
   rest_api_id = aws_api_gateway_rest_api.main.id
@@ -83,14 +120,20 @@ resource "aws_api_gateway_integration" "catalog_proxy_http" {
 resource "aws_api_gateway_deployment" "main" {
   rest_api_id = aws_api_gateway_rest_api.main.id
 
+  # Forces a new deployment if the backend URL or the method IDs change
   triggers = {
     redeploy = sha1(join(",", [
       var.catalog_backend_url,
       aws_api_gateway_method.root_any.id,
-      local.catalog_proxy_enabled ? aws_api_gateway_integration.catalog_base_http[0].id : "",
-      local.catalog_proxy_enabled ? aws_api_gateway_integration.catalog_proxy_http[0].id : ""
+      local.catalog_proxy_enabled ? aws_api_gateway_resource.catalog[0].id : ""
     ]))
   }
+
+  depends_on = [
+    aws_api_gateway_integration.root_integration,
+    aws_api_gateway_integration.catalog_base_http,
+    aws_api_gateway_integration.catalog_proxy_http
+  ]
 }
 
 resource "aws_api_gateway_stage" "prod" {
