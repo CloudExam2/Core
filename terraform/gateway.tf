@@ -12,7 +12,7 @@ resource "aws_api_gateway_rest_api" "main" {
   }
 }
 
-# --- ROOT (/) CONFIGURATION ---
+# --- ROOT (/) ---
 
 resource "aws_api_gateway_method" "root_any" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
@@ -22,23 +22,19 @@ resource "aws_api_gateway_method" "root_any" {
 }
 
 resource "aws_api_gateway_integration" "root_integration" {
-  rest_api_id = aws_api_gateway_rest_api.main.id
-  resource_id = aws_api_gateway_rest_api.main.root_resource_id
-  http_method = aws_api_gateway_method.root_any.http_method
-
-  # If URL exists, Proxy to Catalog; Else, stay MOCK
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_rest_api.main.root_resource_id
+  http_method             = aws_api_gateway_method.root_any.http_method
   type                    = local.catalog_proxy_enabled ? "HTTP_PROXY" : "MOCK"
   integration_http_method = local.catalog_proxy_enabled ? "ANY" : null
   uri                     = local.catalog_proxy_enabled ? "${local.catalog_base}/" : null
   
-  # This template only applies if type is MOCK
   request_templates = local.catalog_proxy_enabled ? {} : {
     "application/json" = "{\"statusCode\": 200}"
   }
 }
 
-# Only need a response if we are in MOCK mode. 
-# Proxy integrations handle responses automatically.
+# Response logic only for MOCK mode
 resource "aws_api_gateway_method_response" "root_200" {
   count       = local.catalog_proxy_enabled ? 0 : 1
   rest_api_id = aws_api_gateway_rest_api.main.id
@@ -58,7 +54,7 @@ resource "aws_api_gateway_integration_response" "root_200" {
   }
 }
 
-# --- /catalog CONFIGURATION ---
+# --- /catalog ---
 
 resource "aws_api_gateway_resource" "catalog" {
   count       = local.catalog_proxy_enabled ? 1 : 0
@@ -85,7 +81,7 @@ resource "aws_api_gateway_integration" "catalog_base_http" {
   uri                     = "${local.catalog_base}/"
 }
 
-# --- /catalog/{proxy+} CONFIGURATION ---
+# --- /catalog/{proxy+} ---
 
 resource "aws_api_gateway_resource" "catalog_proxy" {
   count       = local.catalog_proxy_enabled ? 1 : 0
@@ -118,30 +114,25 @@ resource "aws_api_gateway_integration" "catalog_proxy_http" {
   }
 }
 
-# --- DEPLOYMENT ---
+# --- DEPLOYMENT & STAGE ---
 
 resource "aws_api_gateway_deployment" "main" {
   rest_api_id = aws_api_gateway_rest_api.main.id
 
-  # Triggers a redeploy if the URL or integrations change
+  # Triggers replacement if backend URL changes or integrations are updated
   triggers = {
     redeploy = sha1(join(",", [
       var.catalog_backend_url,
-      jsonencode(aws_api_gateway_integration.root_integration),
-      local.catalog_proxy_enabled ? jsonencode(aws_api_gateway_integration.catalog_base_http[0]) : "",
-      local.catalog_proxy_enabled ? jsonencode(aws_api_gateway_integration.catalog_proxy_http[0]) : ""
+      aws_api_gateway_method.root_any.id,
+      # Only add catalog IDs if they exist
+      local.catalog_proxy_enabled ? aws_api_gateway_integration.catalog_base_http[0].id : "",
+      local.catalog_proxy_enabled ? aws_api_gateway_integration.catalog_proxy_http[0].id : ""
     ]))
   }
 
   lifecycle {
     create_before_destroy = true
   }
-
-  depends_on = [
-    aws_api_gateway_integration.root_integration,
-    aws_api_gateway_integration.catalog_base_http,
-    aws_api_gateway_integration.catalog_proxy_http
-  ]
 }
 
 resource "aws_api_gateway_stage" "prod" {
