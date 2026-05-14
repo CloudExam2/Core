@@ -120,7 +120,6 @@ resource "aws_api_gateway_integration" "catalog_proxy_http" {
 resource "aws_api_gateway_deployment" "main" {
   rest_api_id = aws_api_gateway_rest_api.main.id
 
-  # Forces a new deployment if the backend URL or the method IDs change
   triggers = {
     redeploy = sha1(join(",", [
       var.catalog_backend_url,
@@ -129,6 +128,15 @@ resource "aws_api_gateway_deployment" "main" {
     ]))
   }
 
+  # THIS IS THE CRITICAL FIX:
+  # It creates the new deployment before destroying the old one,
+  # allowing the stage to switch over without the "Active stages" error.
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  # We depend on the integrations to be ready, but NOT the responses
+  # to avoid the circular dependency we saw earlier.
   depends_on = [
     aws_api_gateway_integration.root_integration,
     aws_api_gateway_integration.catalog_base_http,
@@ -140,4 +148,9 @@ resource "aws_api_gateway_stage" "prod" {
   deployment_id = aws_api_gateway_deployment.main.id
   rest_api_id   = aws_api_gateway_rest_api.main.id
   stage_name    = "prod"
+
+  # Ensure the stage updates when the deployment ID changes
+  lifecycle {
+    create_before_destroy = true
+  }
 }
