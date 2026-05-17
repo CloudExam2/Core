@@ -36,3 +36,30 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve
+
+      - name: Core outputs (job summary)
+        if: github.ref == 'refs/heads/main'
+        working-directory: ./terraform
+        run: |
+          VPC_ID=$(terraform output -raw vpc_id 2>/dev/null || echo "n/a")
+          BACKEND="${TF_VAR_catalog_backend_url:-}"
+          {
+            echo "## Core infrastructure"
+            echo ""
+            echo "| Output | Value |"
+            echo "|--------|-------|"
+            echo "| VPC ID | \`${VPC_ID}\` |"
+            echo "| Catalog proxy path (when API GW exists) | \`/catalog/{proxy+}\` |"
+            echo ""
+            if [ -n "$BACKEND" ]; then
+              INVOKE=$(terraform output -raw api_gateway_invoke_url 2>/dev/null || echo "")
+              if [ -n "$INVOKE" ]; then
+                echo "**API Gateway base:** \`${INVOKE}\`"
+                echo "**Catalog via gateway:** \`${INVOKE}/catalog/\` (example)"
+              else
+                echo "Set \`CATALOG_BACKEND_URL\` = \`${BACKEND}\` but \`api_gateway_invoke_url\` output is missing — add \`gateway.tf\` in Core or use Catalog EC2 URL directly."
+              fi
+            else
+              echo "**Catalog HTTP URL** is **not** in Core. Run **Catalog** CI first, then set GitHub variable \`CATALOG_BACKEND_URL\` on this repo to \`http://EC2_PUBLIC_IP:80\` and re-run Core."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
