@@ -18,11 +18,6 @@ output "public_subnet_ids" {
   value       = [aws_subnet.public_a.id, aws_subnet.public_b.id]
 }
 
-output "api_gateway_invoke_url" {
-  description = "Invoke URL for prod stage (GET / shows placeholder until catalog_backend_url is set)"
-  value       = "https://${aws_api_gateway_rest_api.main.id}.execute-api.${data.aws_region.current.name}.amazonaws.com/${aws_api_gateway_stage.prod.stage_name}"
-}
-
 output "catalog_proxy_path" {
   description = "Path prefix proxied to Catalog when catalog_backend_url is set"
   value       = "/catalog/{proxy+}"
