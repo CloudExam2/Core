@@ -68,7 +68,8 @@ locals {
     }
   ] : []
 
-  catalog_mem = local.catalog_id != "" ? [
+  # Agent metrics: SEARCH avoids exact dimension mismatches (host vs InstanceId, disk device, etc.)
+  catalog_mem = [
     {
       type   = "metric"
       x      = 0
@@ -76,13 +77,15 @@ locals {
       width  = 12
       height = 6
       properties = merge(local.metric_defaults, {
-        title   = "Catalog – Memory %"
-        metrics = [["Exam2/Catalog", "mem_used_percent", "InstanceId", local.catalog_id]]
+        title = "Catalog – Memory % (agent)"
+        metrics = [
+          [{ "expression" = "SEARCH('{Exam2/Catalog} MetricName=\"mem_used_percent\"', 'Average', 300)", "id" = "m1", "label" = "mem_used_percent" }]
+        ]
       })
     }
-  ] : []
+  ]
 
-  sales_mem = local.sales_id != "" ? [
+  sales_mem = [
     {
       type   = "metric"
       x      = 12
@@ -90,13 +93,15 @@ locals {
       width  = 12
       height = 6
       properties = merge(local.metric_defaults, {
-        title   = "Sales – Memory %"
-        metrics = [["Exam2/Sales", "mem_used_percent", "InstanceId", local.sales_id]]
+        title = "Sales – Memory % (agent)"
+        metrics = [
+          [{ "expression" = "SEARCH('{Exam2/Sales} MetricName=\"mem_used_percent\"', 'Average', 300)", "id" = "m1", "label" = "mem_used_percent" }]
+        ]
       })
     }
-  ] : []
+  ]
 
-  catalog_disk = local.catalog_id != "" ? [
+  catalog_disk = [
     {
       type   = "metric"
       x      = 0
@@ -104,13 +109,15 @@ locals {
       width  = 12
       height = 6
       properties = merge(local.metric_defaults, {
-        title   = "Catalog – Disk % (/)"
-        metrics = [["Exam2/Catalog", "used_percent", "path", "/", "InstanceId", local.catalog_id]]
+        title = "Catalog – Disk % (agent, root /)"
+        metrics = [
+          [{ "expression" = "SEARCH('{Exam2/Catalog} MetricName=\"used_percent\"', 'Average', 300)", "id" = "d1", "label" = "used_percent" }]
+        ]
       })
     }
-  ] : []
+  ]
 
-  sales_disk = local.sales_id != "" ? [
+  sales_disk = [
     {
       type   = "metric"
       x      = 12
@@ -118,11 +125,13 @@ locals {
       width  = 12
       height = 6
       properties = merge(local.metric_defaults, {
-        title   = "Sales – Disk % (/)"
-        metrics = [["Exam2/Sales", "used_percent", "path", "/", "InstanceId", local.sales_id]]
+        title = "Sales – Disk % (agent, root /)"
+        metrics = [
+          [{ "expression" = "SEARCH('{Exam2/Sales} MetricName=\"used_percent\"', 'Average', 300)", "id" = "d1", "label" = "used_percent" }]
+        ]
       })
     }
-  ] : []
+  ]
 
   placeholder = (local.catalog_id == "" && local.sales_id == "") ? [
     {

@@ -77,19 +77,6 @@ jobs:
             echo "### Sales (Elastic IP)"
             url_line "$SAL_EIP"
             echo ""
-            echo "### GitHub vars on Core repo (for API Gateway; refresh when Catalog/Sales terraform runs)"
-            echo "- \`CATALOG_BACKEND_URL\`: ${CAT_VAR:-_not set_}"
-            echo "- \`SALES_BACKEND_URL\`: ${SAL_VAR:-_not set_}"
-            if [ -n "$CAT_EIP" ] && [ -n "$CAT_VAR" ] && [ "$CAT_VAR" != "http://${CAT_EIP}:80" ] && [ "$CAT_VAR" != "http://${CAT_EIP}" ]; then
-              echo "::warning::Catalog GitHub var does not match live EIP — re-run **Catalog** CI."
-            fi
-            if [ -n "$SAL_EIP" ] && [ -n "$SAL_VAR" ] && [ "$SAL_VAR" != "http://${SAL_EIP}:80" ] && [ "$SAL_VAR" != "http://${SAL_EIP}" ]; then
-              echo "::warning::Sales GitHub var does not match live EIP — re-run **Sales** CI."
-            fi
-            echo ""
-            LOG_CAT=$(terraform output -raw catalog_log_group_name 2>/dev/null || echo "")
-            LOG_SAL=$(terraform output -raw sales_log_group_name 2>/dev/null || echo "")
-            echo ""
             echo "VPC \`${VPC_ID}\`"
             if [ -n "$LOG_CAT" ]; then echo "Catalog logs → \`${LOG_CAT}\` · filter inter-service: \`catalog.inbound\`"; fi
             if [ -n "$LOG_SAL" ]; then echo "Sales logs → \`${LOG_SAL}\` · filter inter-service: \`sales.catalog\`"; fi
