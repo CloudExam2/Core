@@ -87,7 +87,7 @@ jobs:
               echo ""
               echo "**Metrics dashboard** (CPU + memory + disk): [Exam2-EC2-Overview](${DASH_URL})"
               echo "- Catalog instance: \`${DASH_CAT:-not in state}\`"
-              echo "- Sales instance: \`${DASH_SAL:-not in state}\` (re-run Sales CI then Core if this is wrong)"
+              echo "- Sales instance: \`${DASH_SAL:-not in state}\`)"
             fi
             if [ -n "$GW" ]; then echo "API GW → \`${GW}\`"; fi
           } >> "$GITHUB_STEP_SUMMARY"

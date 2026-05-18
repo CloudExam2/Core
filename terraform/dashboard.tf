@@ -229,9 +229,6 @@ locals {
       properties = merge(local.cw_http_widget_defaults, {
         title = "Sales HTTP % (from logs)"
         metrics = [
-          ["Exam2/Http", "SalesHttp2xx", { id = "s2", stat = "Sum" }],
-          [".", "SalesHttp4xx", { id = "s4", stat = "Sum" }],
-          [".", "SalesHttp5xx", { id = "s5", stat = "Sum" }],
           [{ expression = "100 * s2 / (s2 + s4 + s5 + 1)", label = "% 2xx", id = "sp2" }],
           [{ expression = "100 * s4 / (s2 + s4 + s5 + 1)", label = "% 4xx", id = "sp4" }],
           [{ expression = "100 * s5 / (s2 + s4 + s5 + 1)", label = "% 5xx", id = "sp5" }],
@@ -250,9 +247,6 @@ locals {
       properties = merge(local.cw_http_widget_defaults, {
         title = "Sales→Catalog % (from logs)"
         metrics = [
-          ["Exam2/Http", "SalesCatalog2xx", { id = "x2", stat = "Sum" }],
-          [".", "SalesCatalog4xx", { id = "x4", stat = "Sum" }],
-          [".", "SalesCatalog5xx", { id = "x5", stat = "Sum" }],
           [{ expression = "100 * x2 / (x2 + x4 + x5 + 1)", label = "% 2xx", id = "xp2" }],
           [{ expression = "100 * x4 / (x2 + x4 + x5 + 1)", label = "% 4xx", id = "xp4" }],
           [{ expression = "100 * x5 / (x2 + x4 + x5 + 1)", label = "% 5xx", id = "xp5" }],
