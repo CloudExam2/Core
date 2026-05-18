@@ -41,16 +41,39 @@ jobs:
       - name: Core outputs (job summary)
         if: github.ref == 'refs/heads/main'
         working-directory: ./terraform
+        env:
+          AWS_REGION: us-east-1
         run: |
           VPC_ID=$(terraform output -raw vpc_id 2>/dev/null || echo "n/a")
-          CAT="${TF_VAR_catalog_backend_url:-}"
-          SAL="${TF_VAR_sales_backend_url:-}"
+          CAT_VAR="${TF_VAR_catalog_backend_url:-}"
+          SAL_VAR="${TF_VAR_sales_backend_url:-}"
           GW=$(terraform output -raw api_gateway_invoke_url 2>/dev/null || true)
+
+          live_ips() {
+            local tag="$1"
+            aws ec2 describe-instances --region "$AWS_REGION" \
+              --filters "Name=tag:Name,Values=${tag}" "Name=instance-state-name,Values=running,pending,stopped" \
+              --query 'Reservations[].Instances[].[InstanceId,State.Name,PublicIpAddress]' \
+              --output text 2>/dev/null || true
+          }
+
+          CAT_LIVE=$(live_ips "Catalog-Service")
+          SAL_LIVE=$(live_ips "Sales-Service")
+
           {
             echo "## Core"
-            echo "VPC \`${VPC_ID}\` · proxy path \`/catalog/{proxy+}\` (needs \`gateway.tf\`)"
+            echo "VPC \`${VPC_ID}\`"
             echo ""
-            if [ -n "$CAT" ]; then echo "Catalog → \`${CAT}\`"; else echo "Catalog → _set \`CATALOG_BACKEND_URL\` after Catalog CI_"; fi
-            if [ -n "$SAL" ]; then echo "Sales → \`${SAL}\`"; else echo "Sales → _set \`SALES_BACKEND_URL\` after Sales CI_"; fi
-            if [ -n "$GW" ]; then echo "API GW → \`${GW}\`"; fi
+            echo "**Catalog** (GitHub var): ${CAT_VAR:-_not set_}"
+            echo "**Catalog** (live EC2 tag \`Catalog-Service\`):"
+            if [ -z "$CAT_LIVE" ]; then echo "_no instances_"; else echo "\`\`\`"; echo "$CAT_LIVE"; echo "\`\`\`"; fi
+            echo ""
+            echo "**Sales** (GitHub var): ${SAL_VAR:-_not set_}"
+            echo "**Sales** (live EC2 tag \`Sales-Service\`):"
+            if [ -z "$SAL_LIVE" ]; then echo "_no instances_"; else echo "\`\`\`"; echo "$SAL_LIVE"; echo "\`\`\`"; fi
+            if [ "$(echo "$SAL_LIVE" | wc -l)" -gt 1 ]; then
+              echo ""
+              echo "::warning::More than one \`Sales-Service\` instance — terminate orphans in AWS console, then re-run Sales + Core CI."
+            fi
+            if [ -n "$GW" ]; then echo ""; echo "API GW → \`${GW}\`"; fi
           } >> "$GITHUB_STEP_SUMMARY"
