@@ -27,3 +27,8 @@ output "catalog_log_group_name" {
   description = "CloudWatch Logs group for Catalog Docker/uvicorn output"
   value       = aws_cloudwatch_log_group.catalog.name
 }
+
+output "sales_log_group_name" {
+  description = "CloudWatch Logs group for Sales Docker/uvicorn output"
+  value       = aws_cloudwatch_log_group.sales.name
+}

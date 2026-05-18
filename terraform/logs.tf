@@ -12,3 +12,13 @@ resource "aws_cloudwatch_log_group" "catalog" {
     Service = "catalog"
   }
 }
+
+resource "aws_cloudwatch_log_group" "sales" {
+  name              = "/exam2/sales"
+  retention_in_days = 7
+
+  tags = {
+    Name    = "sales-app"
+    Service = "sales"
+  }
+}

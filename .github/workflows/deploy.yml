@@ -71,10 +71,10 @@ jobs:
           {
             echo "## Core — service URLs"
             echo ""
-            echo "### Catalog (Elastic IP — use these)"
+            echo "### Catalog (Elastic IP)"
             url_line "$CAT_EIP"
             echo ""
-            echo "### Sales (Elastic IP — use these)"
+            echo "### Sales (Elastic IP)"
             url_line "$SAL_EIP"
             echo ""
             echo "### GitHub vars on Core repo (for API Gateway; refresh when Catalog/Sales terraform runs)"
@@ -88,8 +88,10 @@ jobs:
             fi
             echo ""
             LOG_CAT=$(terraform output -raw catalog_log_group_name 2>/dev/null || echo "")
+            LOG_SAL=$(terraform output -raw sales_log_group_name 2>/dev/null || echo "")
             echo ""
             echo "VPC \`${VPC_ID}\`"
-            if [ -n "$LOG_CAT" ]; then echo "Catalog logs → \`${LOG_CAT}\` (CloudWatch → Log groups)"; fi
+            if [ -n "$LOG_CAT" ]; then echo "Catalog logs → \`${LOG_CAT}\` · filter inter-service: \`catalog.inbound\`"; fi
+            if [ -n "$LOG_SAL" ]; then echo "Sales logs → \`${LOG_SAL}\` · filter inter-service: \`sales.catalog\`"; fi
             if [ -n "$GW" ]; then echo "API GW → \`${GW}\`"; fi
           } >> "$GITHUB_STEP_SUMMARY"
