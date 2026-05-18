@@ -81,9 +81,13 @@ jobs:
             if [ -n "$LOG_CAT" ]; then echo "Catalog logs → \`${LOG_CAT}\` · filter inter-service: \`catalog.inbound\`"; fi
             if [ -n "$LOG_SAL" ]; then echo "Sales logs → \`${LOG_SAL}\` · filter inter-service: \`sales.catalog\`"; fi
             DASH_URL=$(terraform output -raw ec2_metrics_dashboard_url 2>/dev/null || echo "")
+            DASH_CAT=$(terraform output -raw dashboard_catalog_instance_id 2>/dev/null || echo "")
+            DASH_SAL=$(terraform output -raw dashboard_sales_instance_id 2>/dev/null || echo "")
             if [ -n "$DASH_URL" ]; then
               echo ""
-              echo "**Metrics dashboard** (CPU + memory + disk for both EC2): [Exam2-EC2-Overview](${DASH_URL})"
+              echo "**Metrics dashboard** (CPU + memory + disk): [Exam2-EC2-Overview](${DASH_URL})"
+              echo "- Catalog instance: \`${DASH_CAT:-not in state}\`"
+              echo "- Sales instance: \`${DASH_SAL:-not in state}\` (re-run Sales CI then Core if this is wrong)"
             fi
             if [ -n "$GW" ]; then echo "API GW → \`${GW}\`"; fi
           } >> "$GITHUB_STEP_SUMMARY"

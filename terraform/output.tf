@@ -42,3 +42,13 @@ output "ec2_metrics_dashboard_url" {
   description = "Console link to the Exam2 EC2 metrics dashboard"
   value       = "https://${data.aws_region.current.name}.console.aws.amazon.com/cloudwatch/home?region=${data.aws_region.current.name}#dashboards/dashboard/Exam2-EC2-Overview"
 }
+
+output "dashboard_catalog_instance_id" {
+  description = "Catalog EC2 id wired into the metrics dashboard"
+  value       = try(data.terraform_remote_state.catalog.outputs.ec2_catalog_id, "")
+}
+
+output "dashboard_sales_instance_id" {
+  description = "Sales EC2 id wired into the metrics dashboard"
+  value       = try(data.terraform_remote_state.sales.outputs.ec2_sales_id, "")
+}
