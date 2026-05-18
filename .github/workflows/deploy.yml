@@ -18,7 +18,8 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
       TF_VAR_github_token: ${{ secrets.GH_PAT }} 
-      TF_VAR_catalog_backend_url: ${{ vars.CATALOG_BACKEND_URL }} #
+      TF_VAR_catalog_backend_url: ${{ vars.CATALOG_BACKEND_URL }} 
+      TF_VAR_sales_backend_url: ${{ vars.SALES_BACKEND_URL }} 
     
     steps:
       - name: Checkout
@@ -42,24 +43,14 @@ jobs:
         working-directory: ./terraform
         run: |
           VPC_ID=$(terraform output -raw vpc_id 2>/dev/null || echo "n/a")
-          BACKEND="${TF_VAR_catalog_backend_url:-}"
+          CAT="${TF_VAR_catalog_backend_url:-}"
+          SAL="${TF_VAR_sales_backend_url:-}"
+          GW=$(terraform output -raw api_gateway_invoke_url 2>/dev/null || true)
           {
-            echo "## Core infrastructure"
+            echo "## Core"
+            echo "VPC \`${VPC_ID}\` · proxy path \`/catalog/{proxy+}\` (needs \`gateway.tf\`)"
             echo ""
-            echo "| Output | Value |"
-            echo "|--------|-------|"
-            echo "| VPC ID | \`${VPC_ID}\` |"
-            echo "| Catalog proxy path (when API GW exists) | \`/catalog/{proxy+}\` |"
-            echo ""
-            if [ -n "$BACKEND" ]; then
-              INVOKE=$(terraform output -raw api_gateway_invoke_url 2>/dev/null || echo "")
-              if [ -n "$INVOKE" ]; then
-                echo "**API Gateway base:** \`${INVOKE}\`"
-                echo "**Catalog via gateway:** \`${INVOKE}/catalog/\` (example)"
-              else
-                echo "Set \`CATALOG_BACKEND_URL\` = \`${BACKEND}\` but \`api_gateway_invoke_url\` output is missing — add \`gateway.tf\` in Core or use Catalog EC2 URL directly."
-              fi
-            else
-              echo "**Catalog HTTP URL** is **not** in Core. Run **Catalog** CI first, then set GitHub variable \`CATALOG_BACKEND_URL\` on this repo to \`http://EC2_PUBLIC_IP:80\` and re-run Core."
-            fi
+            if [ -n "$CAT" ]; then echo "Catalog → \`${CAT}\`"; else echo "Catalog → _set \`CATALOG_BACKEND_URL\` after Catalog CI_"; fi
+            if [ -n "$SAL" ]; then echo "Sales → \`${SAL}\`"; else echo "Sales → _set \`SALES_BACKEND_URL\` after Sales CI_"; fi
+            if [ -n "$GW" ]; then echo "API GW → \`${GW}\`"; fi
           } >> "$GITHUB_STEP_SUMMARY"
