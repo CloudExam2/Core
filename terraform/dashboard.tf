@@ -192,7 +192,7 @@ locals {
     }
   ]
 
-  http_defaults = {
+  cw_http_widget_defaults = {
     region = local.region
     period = 300
     view   = "timeSeries"
@@ -205,7 +205,7 @@ locals {
       y      = 24
       width  = 8
       height = 6
-      properties = merge(http_defaults, {
+      properties = merge(local.cw_http_widget_defaults, {
         title = "Catalog HTTP % (from logs)"
         metrics = [
           ["Exam2/Http", "CatalogHttp2xx", { id = "c2", stat = "Sum" }],
@@ -226,7 +226,7 @@ locals {
       y      = 24
       width  = 8
       height = 6
-      properties = merge(http_defaults, {
+      properties = merge(local.cw_http_widget_defaults, {
         title = "Sales HTTP % (from logs)"
         metrics = [
           ["Exam2/Http", "SalesHttp2xx", { id = "s2", stat = "Sum" }],
@@ -247,7 +247,7 @@ locals {
       y      = 24
       width  = 8
       height = 6
-      properties = merge(http_defaults, {
+      properties = merge(local.cw_http_widget_defaults, {
         title = "Sales→Catalog % (from logs)"
         metrics = [
           ["Exam2/Http", "SalesCatalog2xx", { id = "x2", stat = "Sum" }],
