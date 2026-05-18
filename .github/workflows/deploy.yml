@@ -49,31 +49,44 @@ jobs:
           SAL_VAR="${TF_VAR_sales_backend_url:-}"
           GW=$(terraform output -raw api_gateway_invoke_url 2>/dev/null || true)
 
-          live_ips() {
-            local tag="$1"
-            aws ec2 describe-instances --region "$AWS_REGION" \
-              --filters "Name=tag:Name,Values=${tag}" "Name=instance-state-name,Values=running,pending,stopped" \
-              --query 'Reservations[].Instances[].[InstanceId,State.Name,PublicIpAddress]' \
-              --output text 2>/dev/null || true
+          eip_ip() {
+            aws ec2 describe-addresses --region "$AWS_REGION" \
+              --filters "Name=tag:Name,Values=$1" \
+              --query 'Addresses[0].PublicIp' --output text 2>/dev/null \
+              | grep -v '^None$' || true
           }
 
-          CAT_LIVE=$(live_ips "Catalog-Service")
-          SAL_LIVE=$(live_ips "Sales-Service")
+          CAT_EIP=$(eip_ip "catalog-service-eip")
+          SAL_EIP=$(eip_ip "sales-service-eip")
+
+          url_line() {
+            local ip="$1"
+            if [ -n "$ip" ] && [ "$ip" != "None" ]; then
+              echo "- http://${ip}/ (health) · http://${ip}/docs (swagger)"
+            else
+              echo "- _EIP not found — run Catalog/Sales CI (terraform apply)_"
+            fi
+          }
 
           {
-            echo "## Core"
-            echo "VPC \`${VPC_ID}\`"
+            echo "## Core — service URLs"
             echo ""
-            echo "**Catalog** (GitHub var): ${CAT_VAR:-_not set_}"
-            echo "**Catalog** (live EC2 tag \`Catalog-Service\`):"
-            if [ -z "$CAT_LIVE" ]; then echo "_no instances_"; else echo "\`\`\`"; echo "$CAT_LIVE"; echo "\`\`\`"; fi
+            echo "### Catalog (Elastic IP — use these)"
+            url_line "$CAT_EIP"
             echo ""
-            echo "**Sales** (GitHub var): ${SAL_VAR:-_not set_}"
-            echo "**Sales** (live EC2 tag \`Sales-Service\`):"
-            if [ -z "$SAL_LIVE" ]; then echo "_no instances_"; else echo "\`\`\`"; echo "$SAL_LIVE"; echo "\`\`\`"; fi
-            if [ "$(echo "$SAL_LIVE" | wc -l)" -gt 1 ]; then
-              echo ""
-              echo "::warning::More than one \`Sales-Service\` instance — terminate orphans in AWS console, then re-run Sales + Core CI."
+            echo "### Sales (Elastic IP — use these)"
+            url_line "$SAL_EIP"
+            echo ""
+            echo "### GitHub vars on Core repo (for API Gateway; refresh when Catalog/Sales terraform runs)"
+            echo "- \`CATALOG_BACKEND_URL\`: ${CAT_VAR:-_not set_}"
+            echo "- \`SALES_BACKEND_URL\`: ${SAL_VAR:-_not set_}"
+            if [ -n "$CAT_EIP" ] && [ -n "$CAT_VAR" ] && [ "$CAT_VAR" != "http://${CAT_EIP}:80" ] && [ "$CAT_VAR" != "http://${CAT_EIP}" ]; then
+              echo "::warning::Catalog GitHub var does not match live EIP — re-run **Catalog** CI."
             fi
-            if [ -n "$GW" ]; then echo ""; echo "API GW → \`${GW}\`"; fi
+            if [ -n "$SAL_EIP" ] && [ -n "$SAL_VAR" ] && [ "$SAL_VAR" != "http://${SAL_EIP}:80" ] && [ "$SAL_VAR" != "http://${SAL_EIP}" ]; then
+              echo "::warning::Sales GitHub var does not match live EIP — re-run **Sales** CI."
+            fi
+            echo ""
+            echo "VPC \`${VPC_ID}\`"
+            if [ -n "$GW" ]; then echo "API GW → \`${GW}\`"; fi
           } >> "$GITHUB_STEP_SUMMARY"
