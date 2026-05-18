@@ -32,3 +32,13 @@ output "sales_log_group_name" {
   description = "CloudWatch Logs group for Sales Docker/uvicorn output"
   value       = aws_cloudwatch_log_group.sales.name
 }
+
+output "ec2_metrics_dashboard_name" {
+  description = "CloudWatch dashboard with CPU, memory, and disk for Catalog & Sales EC2"
+  value       = aws_cloudwatch_dashboard.exam2_ec2.dashboard_name
+}
+
+output "ec2_metrics_dashboard_url" {
+  description = "Console link to the Exam2 EC2 metrics dashboard"
+  value       = "https://${data.aws_region.current.name}.console.aws.amazon.com/cloudwatch/home?region=${data.aws_region.current.name}#dashboards/dashboard/Exam2-EC2-Overview"
+}

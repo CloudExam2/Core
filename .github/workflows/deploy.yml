@@ -93,5 +93,10 @@ jobs:
             echo "VPC \`${VPC_ID}\`"
             if [ -n "$LOG_CAT" ]; then echo "Catalog logs → \`${LOG_CAT}\` · filter inter-service: \`catalog.inbound\`"; fi
             if [ -n "$LOG_SAL" ]; then echo "Sales logs → \`${LOG_SAL}\` · filter inter-service: \`sales.catalog\`"; fi
+            DASH_URL=$(terraform output -raw ec2_metrics_dashboard_url 2>/dev/null || echo "")
+            if [ -n "$DASH_URL" ]; then
+              echo ""
+              echo "**Metrics dashboard** (CPU + memory + disk for both EC2): [Exam2-EC2-Overview](${DASH_URL})"
+            fi
             if [ -n "$GW" ]; then echo "API GW → \`${GW}\`"; fi
           } >> "$GITHUB_STEP_SUMMARY"
