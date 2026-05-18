@@ -87,6 +87,9 @@ jobs:
               echo "::warning::Sales GitHub var does not match live EIP — re-run **Sales** CI."
             fi
             echo ""
+            LOG_CAT=$(terraform output -raw catalog_log_group_name 2>/dev/null || echo "")
+            echo ""
             echo "VPC \`${VPC_ID}\`"
+            if [ -n "$LOG_CAT" ]; then echo "Catalog logs → \`${LOG_CAT}\` (CloudWatch → Log groups)"; fi
             if [ -n "$GW" ]; then echo "API GW → \`${GW}\`"; fi
           } >> "$GITHUB_STEP_SUMMARY"

@@ -22,3 +22,8 @@ output "catalog_proxy_path" {
   description = "Path prefix proxied to Catalog when catalog_backend_url is set"
   value       = "/catalog/{proxy+}"
 }
+
+output "catalog_log_group_name" {
+  description = "CloudWatch Logs group for Catalog Docker/uvicorn output"
+  value       = aws_cloudwatch_log_group.catalog.name
+}
