@@ -34,7 +34,7 @@ output "sales_log_group_name" {
 }
 
 output "ec2_metrics_dashboard_name" {
-  description = "CloudWatch dashboard with CPU, memory, and disk for Catalog & Sales EC2"
+  description = "CloudWatch dashboard — EC2 CPU/NetworkIn + HTTP % (Catalog, Sales, Sales→Catalog)"
   value       = aws_cloudwatch_dashboard.exam2_ec2.dashboard_name
 }
 
@@ -51,4 +51,9 @@ output "dashboard_catalog_instance_id" {
 output "dashboard_sales_instance_id" {
   description = "Sales EC2 id wired into the metrics dashboard"
   value       = try(data.terraform_remote_state.sales.outputs.ec2_sales_id, "")
+}
+
+output "cpu_alerts_sns_topic_arn" {
+  description = "SNS topic for CPU > 70% alarms (confirm email subscription once)"
+  value       = aws_sns_topic.cpu_alerts.arn
 }

@@ -45,8 +45,8 @@ jobs:
           AWS_REGION: us-east-1
         run: |
           VPC_ID=$(terraform output -raw vpc_id 2>/dev/null || echo "n/a")
-          CAT_VAR="${TF_VAR_catalog_backend_url:-}"
-          SAL_VAR="${TF_VAR_sales_backend_url:-}"
+          LOG_CAT=$(terraform output -raw catalog_log_group_name 2>/dev/null || echo "")
+          LOG_SAL=$(terraform output -raw sales_log_group_name 2>/dev/null || echo "")
           GW=$(terraform output -raw api_gateway_invoke_url 2>/dev/null || true)
 
           eip_ip() {
@@ -85,9 +85,15 @@ jobs:
             DASH_SAL=$(terraform output -raw dashboard_sales_instance_id 2>/dev/null || echo "")
             if [ -n "$DASH_URL" ]; then
               echo ""
-              echo "**Metrics dashboard** (CPU + memory + disk): [Exam2-EC2-Overview](${DASH_URL})"
+              echo "**Metrics dashboard** (CPU, NetworkIn, HTTP %): [Exam2-EC2-Overview](${DASH_URL})"
               echo "- Catalog instance: \`${DASH_CAT:-not in state}\`"
-              echo "- Sales instance: \`${DASH_SAL:-not in state}\`)"
+              echo "- Sales instance: \`${DASH_SAL:-not in state}\`"
+            fi
+            CPU_SNS=$(terraform output -raw cpu_alerts_sns_topic_arn 2>/dev/null || echo "")
+            if [ -n "$CPU_SNS" ]; then
+              echo ""
+              echo "**CPU alarm** >70% → email (confirm SNS once): \`${CPU_SNS}\`"
+              echo "Spike tests: \`pytest tests/test_cpu_spike.py -m seed\` in Catalog and Sales repos."
             fi
             if [ -n "$GW" ]; then echo "API GW → \`${GW}\`"; fi
           } >> "$GITHUB_STEP_SUMMARY"
