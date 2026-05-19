@@ -7,6 +7,11 @@ output "sqs_arn" {
   value = aws_sqs_queue.ticket_queue.arn
 }
 
+output "sqs_queue_url" {
+  description = "Sales publishes new-sale JSON here; Notification Lambda consumes via event source mapping"
+  value       = aws_sqs_queue.ticket_queue.url
+}
+
 # Shared network — consumed by Catalog (and others) via terraform_remote_state
 output "vpc_id" {
   description = "ID of the shared VPC"
