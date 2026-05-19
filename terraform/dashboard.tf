@@ -87,6 +87,21 @@ locals {
     }
   ] : []
 
+  sales_network = local.sales_id != "" ? [
+    {
+      type   = "metric"
+      x      = 12
+      y      = 8
+      width  = 12
+      height = 6
+      properties = merge(local.metric_defaults, {
+        title   = "Sales – Network in (bytes)"
+        yAxis   = { left = { min = 0 } }
+        metrics = [["AWS/EC2", "NetworkIn", "InstanceId", local.sales_id]]
+      })
+    }
+  ] : []
+
   sales_cpu = local.sales_id != "" ? [
     {
       type   = "metric"
@@ -176,6 +191,7 @@ locals {
     local.header,
     local.catalog_cpu,
     local.catalog_network,
+    local.sales_network,
     local.sales_cpu,
     local.catalog_http_pct,
     local.sales_http_pct,
