@@ -34,7 +34,7 @@ output "sales_log_group_name" {
 }
 
 output "ec2_metrics_dashboard_name" {
-  description = "CloudWatch dashboard — EC2 CPU/NetworkIn + HTTP % (Catalog, Sales, Sales→Catalog)"
+  description = "CloudWatch dashboard — EC2 CPU + NetworkIn (both) + HTTP % (Catalog, Sales, Sales→Catalog)"
   value       = aws_cloudwatch_dashboard.exam2_ec2.dashboard_name
 }
 
