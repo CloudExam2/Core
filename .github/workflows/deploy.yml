@@ -3,7 +3,7 @@ name: "Core CI/CD"
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # Allows manual trigger from the UI
+  workflow_dispatch: 
 
 jobs:
   terraform:
