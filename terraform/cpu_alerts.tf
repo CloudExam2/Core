@@ -30,7 +30,7 @@ resource "aws_cloudwatch_metric_alarm" "catalog_cpu_high" {
   evaluation_periods  = 2
   metric_name         = "CPUUtilization"
   namespace           = "AWS/EC2"
-  period              = 60
+  period              = 6
   statistic           = "Average"
   threshold           = 70
   treat_missing_data  = "notBreaching"
@@ -52,7 +52,7 @@ resource "aws_cloudwatch_metric_alarm" "sales_cpu_high" {
   evaluation_periods  = 2
   metric_name         = "CPUUtilization"
   namespace           = "AWS/EC2"
-  period              = 60
+  period              = 6
   statistic           = "Average"
   threshold           = 70
   treat_missing_data  = "notBreaching"
