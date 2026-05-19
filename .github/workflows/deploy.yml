@@ -1,8 +1,6 @@
 name: "Core CI/CD"
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch: 
 
 jobs:
